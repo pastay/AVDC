@@ -91,19 +91,16 @@ def getDirector(htmlcode):  # 获取导演
 
 
 def getOutlineScore(number):  # 获取简介
-    outline = ''
-    score = ''
-    try:
+    dmm_htmlcode = get_html("https://www.dmm.co.jp/search/=/searchstr=" + number + "/sort=ranking/")
+    dmm_page = etree.fromstring(dmm_htmlcode, etree.HTMLParser())
+    dmm_detail = get_html(str(dmm_page.xpath('//*[@id="list"]/li[1]/div/p[2]/a/@href')).split(',',1)[0].strip(" ['']"))
+    html = etree.fromstring(dmm_detail, etree.HTMLParser())
+    outline = str(html.xpath('//*[@class="mg-t0 mg-b20"]/text()')).strip(" ['']")
+    if outline.strip() == "":
         response = post_html("https://www.jav321.com/search", query={"sn": number})
         detail_page = etree.fromstring(response, etree.HTMLParser())
         outline = str(detail_page.xpath('/html/body/div[2]/div[1]/div[1]/div[2]/div[3]/div/text()')).strip(" ['']")
-        if re.search(r'<b>评分</b>: <img data-original="/img/(\d+).gif" />', response):
-            score = re.findall(r'<b>评分</b>: <img data-original="/img/(\d+).gif" />', response)[0]
-            score = str(float(score) / 10.0)
-        else:
-            score = str(re.findall(r'<b>评分</b>: (.+)<br>', response)).strip(" [',']").replace('\'', '')
-    except Exception as error_info:
-        print('Error in javbus.getOutlineScore : ' + str(error_info))
+    score = str(html.xpath('//*[@class="d-review__average"]/strong/text()')).strip(" ['']点")
     return outline, score
 
 
